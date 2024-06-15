@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:12
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./database.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    container_name: postgress_database
+
+  pgadmin:
+    image: dpage/pgadmin4
+    env_file:
+      - ./pgadmin.env
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+    container_name: pgadmin4
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://user:admin@db:5432/globant_challenge
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    links:
+      - db
+    container_name: fastapi
+
+volumes:
+  postgres_data: {}
