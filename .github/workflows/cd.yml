@@ -11,41 +11,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout the files
-      uses: actions/checkout@v2
+      - name: Checkout the files
+        uses: actions/checkout@v2
 
-    - name: Executing remote ssh commands using ssh key
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST_DNS }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          # Update package lists and install Docker
-          sudo apt-get -y update
-          sudo apt-get -y install docker.io
+      - name: Copy docker-compose.yml to remote server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "."
+          target: "${{ secrets.TARGET_DIR }}"
+          script: |
+            # Change to target directory
+            cd ${{ secrets.TARGET_DIR }}
 
-          # Start Docker service
-          sudo systemctl start docker
-          sudo systemctl enable docker
+            # Update package lists and install Docker
+            sudo apt-get -y update
+            sudo apt-get -y install docker.io
 
-          # Install docker-compose
-          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+            # Start Docker service
+            sudo systemctl start docker
+            sudo systemctl enable docker
 
-          # Change to target directory
-          cd ${{ secrets.TARGET_DIR }}
+            # Install docker-compose
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
 
-          # Create the database.env file with necessary environment variables
-          echo "POSTGRES_DB=globant_challenge" > database.env
-          echo "POSTGRES_USER=user" >> database.env
-          echo "POSTGRES_PASSWORD=admin" >> database.env
+            # Remove existing conflicting networks
+            docker network prune -f
 
-          # Create the pgadmin.env file with necessary environment variables
-          echo "PGADMIN_DEFAULT_EMAIL=root@root.com" > pgadmin.env
-          echo "PGADMIN_DEFAULT_PASSWORD=admin" >> pgadmin.env
+            # Create the database.env file with necessary environment variables
+            echo ${{ secrets.POSTGRES_DB }} > database.env
+            echo ${{ secrets.POSTGRES_USER }} > database.env
+            echo ${{ secrets.POSTGRES_PASSWORD }} > database.env
 
-          # Pull the latest Docker image and update the Docker Compose setup
-          sudo docker-compose pull
-          sudo docker-compose up -d --build
+            # Create the pgadmin.env file with necessary environment variables
+            echo ${{ secrets.PGADMIN_DEFAULT_EMAIL }} > pgadmin.env
+            echo ${{ secrets.PGADMIN_DEFAULT_PASSWORD }} > pgadmin.env
+
+            # Pull the latest Docker image and update the Docker Compose setup
+            sudo docker-compose pull
+            sudo docker-compose up -d --build
