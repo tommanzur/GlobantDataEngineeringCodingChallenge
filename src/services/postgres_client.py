@@ -29,6 +29,7 @@ class PostgresClient:
         self.engine = create_engine(self.database_url)
         self.session_factory = sessionmaker(bind=self.engine)
         self.Session = scoped_session(self.session_factory)
+        self.init_db()
 
     def init_db(self):
         """Initialize the database by creating all defined tables."""
@@ -255,3 +256,4 @@ class PostgresClient:
         return df
 
 client = PostgresClient()
+client.init_db()

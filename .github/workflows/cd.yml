@@ -1,0 +1,51 @@
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the files
+      uses: actions/checkout@v2
+
+    - name: Executing remote ssh commands using ssh key
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST_DNS }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # Update package lists and install Docker
+          sudo apt-get -y update
+          sudo apt-get -y install docker.io
+
+          # Start Docker service
+          sudo systemctl start docker
+          sudo systemctl enable docker
+
+          # Install docker-compose
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+          # Change to target directory
+          cd ${{ secrets.TARGET_DIR }}
+
+          # Create the database.env file with necessary environment variables
+          echo "POSTGRES_DB=globant_challenge" > database.env
+          echo "POSTGRES_USER=user" >> database.env
+          echo "POSTGRES_PASSWORD=admin" >> database.env
+
+          # Create the pgadmin.env file with necessary environment variables
+          echo "PGADMIN_DEFAULT_EMAIL=root@root.com" > pgadmin.env
+          echo "PGADMIN_DEFAULT_PASSWORD=admin" >> pgadmin.env
+
+          # Pull the latest Docker image and update the Docker Compose setup
+          sudo docker-compose pull
+          sudo docker-compose up -d --build

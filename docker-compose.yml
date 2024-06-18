@@ -6,16 +6,19 @@ services:
     restart: always
     ports:
       - "5432:5432"
-    env_file:
-      - ./database.env
+    environment:
+      POSTGRES_DB: globant_challenge
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: admin
     volumes:
       - postgres_data:/var/lib/postgresql/data
     container_name: postgress_database
 
   pgadmin:
     image: dpage/pgadmin4
-    env_file:
-      - ./pgadmin.env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@root.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "80:80"
     depends_on:
