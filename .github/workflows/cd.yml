@@ -51,5 +51,4 @@ jobs:
             echo ${{ secrets.PGADMIN_DEFAULT_PASSWORD }} > pgadmin.env
 
             # Pull the latest Docker image and update the Docker Compose setup
-            sudo docker-compose pull
             sudo docker-compose up -d --build
