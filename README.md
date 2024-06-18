@@ -17,62 +17,13 @@ This project is part of Globant's Data Engineering coding challenge. The solutio
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/globant-challenge.git
-cd globant-challenge
+git clone https://github.com/tommanzur/GlobantDataEngineeringCodingChallenge.git
+cd GlobantDataEngineeringCodingChallenge
 ```
 
-### Step 2: Create the `Dockerfile`
+### Step 2: Run Docker Compose
 
-Ensure the `Dockerfile` is present in the root directory:
-
-```dockerfile
-# Dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY src/ .
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### Step 3: Create the `docker-compose.yml`
-
-Ensure the `docker-compose.yml` file is present in the root directory:
-
-```yaml
-version: '3.8'
-
-services:
-  db:
-    image: postgres:12
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: dbname
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  api:
-    build: .
-    environment:
-      DATABASE_URL: postgres://user:password@db/dbname
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-
-volumes:
-  postgres_data:
-```
-
-### Step 4: Run the Containers
-
-Build and run the containers using Docker Compose:
+Run the containers using Docker Compose:
 
 ```bash
 docker-compose up --build
@@ -80,52 +31,40 @@ docker-compose up --build
 
 The API should now be accessible at `http://localhost:8000`.
 
-## Deployment on AWS EC2
+### Accessing the UI
+
+- Swagger UI: `http://localhost:8000/docs`
+- pgAdmin: `http://localhost:80`
+
+## Deployment on AWS EC2 via GitHub Actions
 
 ### Step 1: Launch an EC2 Instance
 
-- Launch an EC2 instance with Amazon Linux 2.
-- Ensure the instance has a security group that allows inbound traffic on ports 22 (SSH) and 8000 (API).
+Launch an EC2 instance with Ubuntu. Ensure the instance has a security group that allows inbound traffic on ports 22 (SSH), 8000 (API), and 80 (pgAdmin).
 
-### Step 2: Connect to Your EC2 Instance
+### Step 2: Configure GitHub Secrets
 
-Connect to your EC2 instance using SSH:
+To deploy using GitHub Actions, configure the following secrets in your GitHub repository:
 
-```bash
-ssh -i /path/to/your-key.pem ec2-user@your-ec2-public-dns
-```
+- DOCKER_PASSWORD
+- DOCKER_USERNAME
+- EC2_SSH_KEY
+- HOST_DNS
+- PGADMIN_DEFAULT_EMAIL
+- PGADMIN_DEFAULT_PASSWORD
+- POSTGRES_DB
+- POSTGRES_PASSWORD
+- POSTGRES_USER
+- TARGET_DIR
+- USERNAME
 
-### Step 3: Install Docker on the EC2 Instance
+### Step 3: Push Changes to GitHub
 
-Install Docker and start the Docker service:
+Push your changes to the repository to trigger the GitHub Actions workflow. The workflow will build and deploy the application to your EC2 instance.
 
-```bash
-sudo yum update -y
-sudo amazon-linux-extras install docker -y
-sudo service docker start
-sudo usermod -a -G docker ec2-user
-```
+### Step 4: Access the Application
 
-Log out and log back in to apply the Docker group changes.
-
-### Step 4: Copy Files to the EC2 Instance
-
-Copy your project files to the EC2 instance. You can use `scp` to transfer files:
-
-```bash
-scp -i /path/to/your-key.pem -r /path/to/your-project ec2-user@your-ec2-public-dns:~
-```
-
-### Step 5: Build and Run the Containers on EC2
-
-Connect to your EC2 instance, navigate to the project directory, and run the containers:
-
-```bash
-cd ~/your-project
-docker-compose up --build -d
-```
-
-Your API should now be accessible at the public IP of your EC2 instance on port 8000.
+Once deployed, you can access the API at the public IP of your EC2 instance on port 8000.
 
 ## Endpoints
 
@@ -141,3 +80,5 @@ To run unit tests:
 ```bash
 pytest
 ```
+
+The API and the database are containerized, and you only need to start Docker Compose.
