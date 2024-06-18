@@ -33,7 +33,7 @@ async def batch_insert(table: TableName, file: UploadFile = File(...)):
         response = await client.handle_batch_insert(rows=rows, table=table.value)
         return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 def get_column_names(table: TableName) -> list:
     """

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from src.services.postgres_client import client
 
 router = APIRouter()
@@ -12,5 +12,9 @@ async def departments_above_average():
     Returns:
         list: A list of departments above average performance.
     """
-    response = await client.get_departments_above_average()
+    try:
+        response = await client.get_departments_above_average()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
     return response

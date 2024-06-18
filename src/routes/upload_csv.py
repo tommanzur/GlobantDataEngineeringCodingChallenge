@@ -24,4 +24,4 @@ async def upload_csv(table: TableName, file: UploadFile = File(...)):
         response = await client.handle_upload(file, table.value)
         return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=400, detail=str(e)) from e

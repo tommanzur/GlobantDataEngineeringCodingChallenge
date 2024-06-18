@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from src.services.postgres_client import client
 
 router = APIRouter()
@@ -11,5 +11,9 @@ async def employees_per_quarter():
     Returns:
         JSON response containing the number of employees per quarter.
     """
-    response = await client.get_employees_per_quarter()
+    try:
+        response = await client.get_employees_per_quarter()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
     return response
